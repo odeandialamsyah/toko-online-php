@@ -1,47 +1,66 @@
 <?php
-require_once 'config/db.php';
-require_once 'models/User.php';
+class AuthController
+{
+    private $pdo;
 
-session_start();
-
-class AuthController {
-    private $user;
-
-    public function __construct($pdo) {
-        $this->user = new User($pdo);
+    public function __construct($pdo)
+    {
+        $this->pdo = $pdo;
     }
 
-    public function register() {
+    public function register()
+    {
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $username = $_POST['username'];
             $email = $_POST['email'];
-            $password = $_POST['password'];
-            $this->user->register($username, $email, $password);
-            header('Location: index.php');
+            $password = password_hash($_POST['password'], PASSWORD_BCRYPT);
+
+            $sql = "INSERT INTO users (username, email, password, role) VALUES (:username, :email, :password, 'user')";
+            $stmt = $this->pdo->prepare($sql);
+            $stmt->bindParam(':username', $username);
+            $stmt->bindParam(':email', $email);
+            $stmt->bindParam(':password', $password);
+
+            if ($stmt->execute()) {
+                header('Location: index.php?action=login');
+                exit;
+            } else {
+                echo "Registration failed.";
+            }
         } else {
-            require 'views/auth/register.php';
+            require 'views/register.php';
         }
     }
 
-    public function login() {
+    public function login()
+    {
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $email = $_POST['email'];
             $password = $_POST['password'];
-            $user = $this->user->login($email, $password);
-            if ($user) {
+
+            $sql = "SELECT * FROM users WHERE email = :email";
+            $stmt = $this->pdo->prepare($sql);
+            $stmt->bindParam(':email', $email);
+            $stmt->execute();
+            $user = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            if ($user && password_verify($password, $user['password'])) {
                 $_SESSION['user'] = $user;
-                header('Location: dashboard.php');
+                header('Location: index.php?action=' . ($user['role'] === 'admin' ? 'admin_dashboard' : 'user_dashboard'));
+                exit;
             } else {
-                echo "Login failed!";
+                echo "Login failed.";
             }
         } else {
-            require 'views/auth/login.php';
+            require 'views/login.php';
         }
     }
 
-    public function logout() {
+    public function logout()
+    {
         session_destroy();
         header('Location: index.php');
+        exit;
     }
 }
 ?>
