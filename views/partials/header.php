@@ -10,7 +10,7 @@
 <body class="bg-gray-100">
     <header class="bg-blue-600 text-white p-4">
         <div class="container mx-auto flex justify-between">
-            <h1 class="text-xl">Toko Online</h1>
+            <h1 class="text-xl">Katalog Online OmKyu</h1>
             <nav>
                 <a href="index.php" class="mr-4">Home</a>
                 <?php if (isset($_SESSION['user'])): ?>
@@ -18,7 +18,7 @@
                     <a href="index.php?action=logout">Logout</a>
                 <?php else: ?>
                     <a href="index.php?action=login" class="mr-4">Login</a>
-                    <a href="index.php?action=register">Register</a>
+                    <!-- <a href="index.php?action=register">Register</a> -->
                 <?php endif; ?>
             </nav>
         </div>
