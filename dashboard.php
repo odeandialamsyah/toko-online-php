@@ -1,33 +1,22 @@
 <?php
-require 'config/db.php';
-require 'models/Product.php';
-require 'controllers/ProductController.php';
-
 session_start();
+require 'config/db.php';
+require 'controllers/ProductController.php';
+require 'models/Product.php';
 
-if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'admin') {
+$productModel = new Product($pdo);
+$productController = new ProductController($productModel);
+
+if (isset($_SESSION['user']) && $_SESSION['user']['role'] === 'admin') {
+    $action = $_GET['action'] ?? '';
+    if ($action === 'list_products') {
+        $productController->index(); // Pastikan pemanggilan ini berada di dalam kondisi yang benar
+    } else {
+        // Tampilkan halaman dashboard default
+        require 'views/admin/dashboard.php';
+    }
+} else {
     header('Location: index.php');
     exit;
-}
-
-$productController = new ProductController($pdo);
-
-$action = $_GET['action'] ?? '';
-$id = $_GET['id'] ?? null;
-
-switch ($action) {
-    case 'create':
-        $productController->create();
-        break;
-    case 'edit':
-        $productController->edit($id);
-        break;
-    case 'delete':
-        $productController->delete($id);
-        break;
-    default:
-        $products = $productController->index();
-        require 'views/product/index.php';
-        break;
 }
 ?>
